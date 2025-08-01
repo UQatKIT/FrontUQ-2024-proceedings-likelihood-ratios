@@ -6,18 +6,22 @@ from itertools import product
 import matplotlib.pyplot as plt
 
 # Directory containing the output files
-output_dir = "jobs/output"
+output_dir = "output"
 
 true_vals = ["0.1"] 
 current_vals = ["0.1", "0.08"]
 new_vals =  ["0.1", "0.08"]
-sigma_vals = ["0.01", "0.025", "0.05", "0.1", "0.25", "0.5", "1"]
-particles_vals = ["100", "1000", "10000", "100000", "1000000"]
-samples_vals = ["1000"]
+sigma_vals = ["0.1", "1"]
+particles_vals = ["1000", "10000"]
+samples_vals = ["100"]
 
 for true, current, new, samples in product(
     true_vals, current_vals, new_vals, samples_vals
 ):
+    # Skip the case where new_vals=current_vals=0.08
+    if current == "0.08" and new == "0.08":
+        continue
+
     # Create figures for each quantity at every iteration of the outermost loop
     figs, axes = plt.subplots(4, 1, figsize=(10, 20), sharex=True)
     if not isinstance(axes, np.ndarray):
