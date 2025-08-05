@@ -17,7 +17,7 @@
  */
 
 /**
- * @file TridiagonalMatrix.hpp
+ * @file PeriodicTridiagonalMatrix.hpp
  * @brief Contains a class describing a tridiagonal matrix system.
  * @author Emil Loevbak
  * emil.loevbak@kuleuven.be
@@ -27,22 +27,20 @@
 #include <vector>
 #include <memory>
 
-// TODO: Replace with ublas?
-
 namespace solvers
 {
     /**
      * Class representing a tridiagonal matrix.
      * The class also contains functionality for solving the tridiagonal matrix system.
      */
-    class TridiagonalMatrix
+    class PeriodicTridiagonalMatrix
     {
     public:
         /**
          * Constructor. Creates an empty matrix.
          * @param dimension The number of rows/columns of the matrix.
          */
-        TridiagonalMatrix(size_t dimension);
+        PeriodicTridiagonalMatrix(size_t dimension);
         /**
          * Access an element of the matrix with a given row and column index.
          * The requested element must lie on the main diagonal or the subdiagonals directly above or below the main diagonal.
@@ -60,14 +58,14 @@ namespace solvers
          */
         double const &operator()(size_t row, size_t column) const;
         /**
-         * Return a given element from a given diagonal.
+         * Return a given element from a given diagonal. Note that this function does not access the corner elements.
          * @param diagonal The diagonal from which to select the element. 0 corresponds with the main diagonal, -1 with the sub-diagonal and 1 with the super-diagonal.
          * @param element The element on that diagonal, starting from 0.
          * @returns A reference to the requested element on the requested diagonal.
          */
         double &diagonalElement(int diagonal, size_t element);
         /**
-         * Return a given element from a given diagonal.
+         * Return a given element from a given diagonal. Note that this function does not access the corner elements.
          * @param diagonal The diagonal from which to select the element. 0 corresponds with the main diagonal, -n with the n-th sub-diagonal and n with the n-th super-diagonal.
          * @param element The element on that diagonal, starting from 0.
          * @returns A const reference to the requested element on the requested diagonal.
@@ -85,7 +83,6 @@ namespace solvers
          * @param solution The location where the solution should be stored. This vector must have the same size as the number of rows/columns in the matrix.
          */
         void transposedSolve(const std::vector<double> &rhs, std::vector<double> &solution);
-        void transposedMatrixVectorProductSubtract(const std::vector<double> &vector, std::vector<double> &result);
         /**
          * Get the number of rows/columns in the matrix.
          * @returns The number of rows/columns.
@@ -113,6 +110,20 @@ namespace solvers
          * A vector of size dimension - 1, representing the super diagonal of the matrix.
          */
         std::unique_ptr<std::vector<double>> superDiagonal;
+        /**
+         * The top right element of the matrix.
+         */
+        double topRight;
+        /**
+         * The bottom left element of the matrix.
+         */
+        double bottomLeft;
+        /**
+         * Implementation of the Thomas algorithm for solving a tridiagonal matrix system. Used internally by solve.
+         * @param rhs The given right hand side. This vector must have the same size as the number of rows/columns in the matrix.
+         * @param solution The location where the solution should be stored. This vector must have the same size as the number of rows/columns in the matrix.
+         */
+        void thomas(const std::vector<double> &rhs, std::vector<double> &solution);
     };
 
 }

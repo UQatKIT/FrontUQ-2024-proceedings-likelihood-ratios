@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "TridiagonalMatrix.hpp"
+#include "PeriodicTridiagonalMatrix.hpp"
 
 namespace solvers
 {
     class HeatEquationGrid
     {
     private:
-        TridiagonalMatrix matrix;
+        PeriodicTridiagonalMatrix matrix;
         std::shared_ptr<std::vector<double>> solution;
         std::shared_ptr<std::vector<double>> solution_tmp;
         double domainLength;

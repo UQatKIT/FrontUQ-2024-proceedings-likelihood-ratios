@@ -16,34 +16,55 @@
  * along with TODO.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "TridiagonalMatrix.hpp"
+#include "PeriodicTridiagonalMatrix.hpp"
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
+#include <numeric>
 
 namespace solvers
 {
 
-    TridiagonalMatrix::TridiagonalMatrix(size_t dimension) : dimension(dimension)
+    PeriodicTridiagonalMatrix::PeriodicTridiagonalMatrix(size_t dimension) : dimension(dimension)
     {
         assert(dimension > 0);
 
         mainDiagonal = std::make_unique<std::vector<double>>(dimension, 0.0);
         subDiagonal = std::make_unique<std::vector<double>>(dimension - 1, 0.0);
         superDiagonal = std::make_unique<std::vector<double>>(dimension - 1, 0.0);
+        topRight = 0.0;
+        bottomLeft = 0.0;
     }
 
-    double &TridiagonalMatrix::operator()(size_t row, size_t column)
+    double &PeriodicTridiagonalMatrix::operator()(size_t row, size_t column)
     {
         assert(row < dimension);
         assert(column < dimension);
         int diagonal = column - row;
-        assert(diagonal <= 1);
+        assert(abs(diagonal) <= 1 || (row == 0 && column == dimension - 1) || (row == dimension - 1 && column == 0));
 
-        return diagonalElement(diagonal, std::min(row, column));
+        if (abs(diagonal) <= 1)
+        {
+            return diagonalElement(diagonal, std::min(row, column));
+        }
+        else if (row == 0 && column == dimension - 1)
+        {
+            return topRight;
+        }
+        else if (row == dimension - 1 && column == 0)
+        {
+            return bottomLeft;
+        }
+        else
+        {
+            assert(false && "Invalid diagonal index");
+            std::cerr << "Invalid attempt to access a zero-defined element of the matrix!" << std::endl;
+            return const_cast<double &>(zero);
+        }
     }
 
-    double const &TridiagonalMatrix::operator()(size_t row, size_t column) const
+    double const &PeriodicTridiagonalMatrix::operator()(size_t row, size_t column) const
     {
         assert(row < dimension);
         assert(column < dimension);
@@ -53,18 +74,26 @@ namespace solvers
         {
             return diagonalElement(diagonal, std::min(row, column));
         }
+        else if (row == 0 && column == dimension - 1)
+        {
+            return topRight;
+        }
+        else if (row == dimension - 1 && column == 0)
+        {
+            return bottomLeft;
+        }
         else
         {
             return zero;
         }
     }
 
-    size_t TridiagonalMatrix::size()
+    size_t PeriodicTridiagonalMatrix::size()
     {
         return dimension;
     }
 
-    double &TridiagonalMatrix::diagonalElement(int diagonal, size_t element)
+    double &PeriodicTridiagonalMatrix::diagonalElement(int diagonal, size_t element)
     {
         assert(std::abs(diagonal) <= 1);
         assert(element < dimension - std::abs(diagonal));
@@ -78,13 +107,14 @@ namespace solvers
         case 1:
             return (*superDiagonal)[element];
         default:
+            assert(false && "Invalid diagonal index");
             std::cerr << "Invalid attempt to acces a zero-defined element of the matrix as non-const!" << std::endl;
-            return const_cast<double &>(zero); // This line is never executed, but the compiler complains if it is not included.
+            return const_cast<double &>(zero);
         }
     }
 
     // TODO: This causes a lot of branching!
-    double const &TridiagonalMatrix::diagonalElement(int diagonal, size_t element) const
+    double const &PeriodicTridiagonalMatrix::diagonalElement(int diagonal, size_t element) const
     {
         assert(element + std::abs(diagonal) < dimension);
 
@@ -101,9 +131,7 @@ namespace solvers
         }
     }
 
-    // TODO: Can we guarantee that the matrix is diagonal dominant?
-    //       If not we need to test and fall back on DGTSV.
-    void TridiagonalMatrix::solve(const std::vector<double> &rhs, std::vector<double> &solution)
+    void PeriodicTridiagonalMatrix::thomas(const std::vector<double> &rhs, std::vector<double> &solution)
     {
         assert(rhs.size() == dimension);
         assert(solution.size() == dimension);
@@ -130,27 +158,58 @@ namespace solvers
         }
     }
 
-    void TridiagonalMatrix::transposedSolve(const std::vector<double> &rhs, std::vector<double> &solution)
+    // Based on the Sherman-Morrison formula for solving a linear system with a modified matrix.
+    // Formula found at (https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm).
+    void PeriodicTridiagonalMatrix::solve(const std::vector<double> &rhs, std::vector<double> &solution)
+    {
+        assert(rhs.size() == dimension);
+        assert(solution.size() == dimension);
+
+        // Produce modified matrix
+        double gamma = std::sqrt(bottomLeft * topRight);
+        (*mainDiagonal)[0] -= gamma;
+        (*mainDiagonal)[dimension - 1] -= bottomLeft * topRight / gamma;
+
+        // Produce right hand sides
+        std::vector<double> u(rhs.size(), 0.0);
+        std::vector<double> v(rhs.size(), 0.0);
+        u[0] = gamma;
+        u[dimension - 1] = bottomLeft;
+        v[0] = 1.0;
+        v[dimension - 1] = topRight / gamma;
+
+        // Solve the modified systems
+        std::vector<double> q(rhs.size(), 0.0);
+        std::vector<double> y(rhs.size(), 0.0);
+        thomas(u, q);
+        thomas(rhs, y);
+
+        // Compute the solution
+        double vy = 0.0;
+        double vq = 0.0;
+        std::transform(v.begin(), v.end(), y.begin(), y.begin(),
+                       [](double v_elem, double y_elem)
+                       { return v_elem * y_elem; });
+        vy = std::accumulate(y.begin(), y.end(), 0.0);
+        std::transform(v.begin(), v.end(), q.begin(), q.begin(),
+                       [](double v_elem, double q_elem)
+                       { return v_elem * q_elem; });
+        vq = std::accumulate(q.begin(), q.end(), 0.0);
+        double factor = vy / (1.0 + vq);
+        std::transform(q.begin(), q.end(), y.begin(), solution.begin(),
+                       [factor](double q_elem, double y_elem)
+                       { return y_elem - factor * q_elem; });
+    }
+
+    void PeriodicTridiagonalMatrix::transposedSolve(const std::vector<double> &rhs, std::vector<double> &solution)
     {
         // Transpose tridiagonal matrix
         std::swap(subDiagonal, superDiagonal);
+        std::swap(topRight, bottomLeft);
         solve(rhs, solution);
         // Transpose back
         std::swap(subDiagonal, superDiagonal);
-    }
-
-    void TridiagonalMatrix::transposedMatrixVectorProductSubtract(const std::vector<double> &vector, std::vector<double> &result)
-    {
-        assert(result.size() == dimension);
-        assert(vector.size() == dimension);
-        assert(dimension > 2);
-
-        result[0] -= (*mainDiagonal)[0] * vector[0] + (*subDiagonal)[0] * vector[1];
-        for (size_t i = 1; i < dimension - 1; ++i)
-        {
-            result[i] -= (*superDiagonal)[i - 1] * vector[i - 1] + (*mainDiagonal)[i] * vector[i] + (*subDiagonal)[i] * vector[i + 1];
-        }
-        result[dimension - 1] -= (*superDiagonal)[dimension - 2] * vector[dimension - 2] + (*mainDiagonal)[dimension - 1] * vector[dimension - 1];
+        std::swap(topRight, bottomLeft);
     }
 
 }
