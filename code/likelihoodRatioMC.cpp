@@ -7,6 +7,7 @@
 #include "metropolis_sampler.hpp"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 int main(int argc, char **argv)
 {
@@ -59,64 +60,42 @@ int main(int argc, char **argv)
     std::vector<double> output_sum(number_of_cells, 0.0);
     std::vector<double> output_sum_squared(number_of_cells, 0.0);
 
-#pragma omp parallel
+    std::shared_ptr<solvers::HeatEquationMonteCarlo> solver_mc = std::make_shared<solvers::HeatEquationMonteCarlo>(domain_length, number_of_cells, dt, end_time, number_of_particles);
+
+    for (size_t i = 0; i < number_of_samples; ++i)
     {
-        // Thread-local accumulators
-        std::vector<double> local_sum(4, 0.0);
-        std::vector<double> local_sum_squared(4, 0.0);
-        std::vector<double> local_output_sum(number_of_cells, 0.0);
-        std::vector<double> local_output_sum_squared(number_of_cells, 0.0);
-        std::shared_ptr<solvers::HeatEquationMonteCarlo> solver_mc = std::make_shared<solvers::HeatEquationMonteCarlo>(domain_length, number_of_cells, dt, end_time, number_of_particles);
+        // Each thread needs its own generator and distribution
+        std::normal_distribution<double> distribution(0.0, measurement_sigma);
 
-#pragma omp for
-        for (size_t i = 0; i < number_of_samples; ++i)
+        std::vector<double> noise(true_solution.size());
+        for (size_t j = 0; j < true_solution.size(); ++j)
         {
-            // Each thread needs its own generator and distribution
-            std::default_random_engine thread_generator(std::random_device{}() + omp_get_thread_num());
-            std::normal_distribution<double> distribution(0.0, measurement_sigma);
-
-            Eigen::VectorXd noise(true_solution.rows());
-            for (size_t j = 0; j < true_solution.rows(); ++j)
-            {
-                noise(j) = distribution(thread_generator);
-            }
-            auto perturbed_solution = true_solution + noise;
-            samplers::MetropolisSampler sampler_mc(solver_mc, true_state, perturbed_solution, measurement_sigma, minInput, maxInput);
-
-            auto current_output = solver_mc->solve(current_state);
-            double current_likelihood = sampler_mc.likelihoodFunction(current_output);
-            auto new_output = solver_mc->solve(new_state);
-            double new_likelihood = sampler_mc.likelihoodFunction(new_output);
-
-            local_sum[0] += current_likelihood;
-            local_sum[1] += new_likelihood;
-            local_sum[2] += new_likelihood / current_likelihood;
-            local_sum[3] += std::min(new_likelihood / current_likelihood, 1.0);
-            local_sum_squared[0] += current_likelihood * current_likelihood;
-            local_sum_squared[1] += new_likelihood * new_likelihood;
-            local_sum_squared[2] += (new_likelihood / current_likelihood) * (new_likelihood / current_likelihood);
-            local_sum_squared[3] += std::min(new_likelihood / current_likelihood, 1.0) * std::min(new_likelihood / current_likelihood, 1.0);
-
-            std::transform(new_output.begin(), new_output.end(), local_output_sum.begin(), local_output_sum.begin(), std::plus<double>());
-            std::transform(new_output.begin(), new_output.end(), local_output_sum_squared.begin(), local_output_sum_squared.begin(), [](double value, double acc)
-                           { return acc + value * value; });
+            noise[j] = distribution(generator);
         }
+        std::vector<double> perturbed_solution(true_solution.size());
+        std::transform(true_solution.begin(), true_solution.end(), noise.begin(), perturbed_solution.begin(),
+                       std::plus<double>());
+        samplers::MetropolisSampler sampler_mc(solver_mc, true_state, perturbed_solution, measurement_sigma, minInput, maxInput);
 
-// Reduction to global accumulators
-#pragma omp critical
-        {
-            for (size_t k = 0; k < 4; ++k)
-            {
-                sum[k] += local_sum[k];
-                sum_squared[k] += local_sum_squared[k];
-            }
-            for (size_t k = 0; k < number_of_cells; ++k)
-            {
-                output_sum[k] += local_output_sum[k];
-                output_sum_squared[k] += local_output_sum_squared[k];
-            }
-        }
+        auto current_output = solver_mc->solve(current_state);
+        double current_likelihood = sampler_mc.likelihoodFunction(current_output);
+        auto new_output = solver_mc->solve(new_state);
+        double new_likelihood = sampler_mc.likelihoodFunction(new_output);
+
+        sum[0] += current_likelihood;
+        sum[1] += new_likelihood;
+        sum[2] += new_likelihood / current_likelihood;
+        sum[3] += std::min(new_likelihood / current_likelihood, 1.0);
+        sum_squared[0] += current_likelihood * current_likelihood;
+        sum_squared[1] += new_likelihood * new_likelihood;
+        sum_squared[2] += (new_likelihood / current_likelihood) * (new_likelihood / current_likelihood);
+        sum_squared[3] += std::min(new_likelihood / current_likelihood, 1.0) * std::min(new_likelihood / current_likelihood, 1.0);
+
+        std::transform(new_output.begin(), new_output.end(), output_sum.begin(), output_sum.begin(), std::plus<double>());
+        std::transform(new_output.begin(), new_output.end(), output_sum_squared.begin(), output_sum_squared.begin(), [](double value, double acc)
+                       { return acc + value * value; });
     }
+
     std::vector<double> average(4);
     std::transform(sum.begin(), sum.end(), average.begin(), [number_of_samples](double value)
                    { return value / number_of_samples; });

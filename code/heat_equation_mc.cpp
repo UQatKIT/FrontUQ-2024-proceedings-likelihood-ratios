@@ -8,6 +8,7 @@
 #include <cassert>
 #include <omp.h>
 #include <iostream>
+#include <algorithm>
 
 namespace solvers
 {
@@ -18,12 +19,12 @@ namespace solvers
     HeatEquationMonteCarlo::HeatEquationMonteCarlo(double domainLength, size_t numberOfCells, double dt, double endTime, size_t numberOfParticles)
         : domainLength(domainLength), numberOfCells(numberOfCells), dt(dt), endTime(endTime), numberOfParticles(numberOfParticles) {}
 
-    Eigen::VectorXd HeatEquationMonteCarlo::solve(double diffusionCoefficient)
+    std::vector<double> HeatEquationMonteCarlo::solve(double diffusionCoefficient)
     {
-        solution = Eigen::VectorXd::Zero(numberOfCells);
+        solution = std::vector<double>(numberOfCells, 0.0);
         double dx = domainLength / numberOfCells;
 
-#pragma omp declare reduction(+ : Eigen::VectorXd : omp_out += omp_in) initializer(omp_priv = Eigen::VectorXd::Zero(omp_orig.size()))
+#pragma omp declare reduction(+ : std::vector<double> : std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<double>())) initializer(omp_priv = decltype(omp_orig)(omp_orig.size()))
 
 #pragma omp parallel
         {
@@ -50,7 +51,7 @@ namespace solvers
 
                 assert(X >= 0.0 && X < domainLength);
                 size_t cellNumber = X / dx;
-                solution(cellNumber) += 1.0 / numberOfParticles / dx;
+                solution[cellNumber] += 1.0 / numberOfParticles / dx;
             }
         }
         return solution;

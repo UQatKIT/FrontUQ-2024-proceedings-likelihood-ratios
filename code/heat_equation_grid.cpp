@@ -12,19 +12,18 @@ namespace solvers
      * Constructor
      */
     HeatEquationGrid::HeatEquationGrid(double domainLength, size_t numberOfCells, double dt, double endTime)
-        : matrix(numberOfCells, numberOfCells), domainLength(domainLength), numberOfCells(numberOfCells), dt(dt), endTime(endTime)
+        : matrix(numberOfCells), domainLength(domainLength), numberOfCells(numberOfCells), dt(dt), endTime(endTime)
     {
         // Initialize solution vectors
-        solution = std::make_shared<Eigen::VectorXd>(numberOfCells);
-        solution_tmp = std::make_shared<Eigen::VectorXd>(numberOfCells);
+        solution = std::make_shared<std::vector<double>>(numberOfCells, 0.0);
+        solution_tmp = std::make_shared<std::vector<double>>(numberOfCells, 0.0);
     }
 
-    Eigen::VectorXd HeatEquationGrid::solve(double diffusionCoefficient)
+    std::vector<double> HeatEquationGrid::solve(double diffusionCoefficient)
     {
         // Set up matrix system
         double dx = domainLength / numberOfCells;
         double alpha = diffusionCoefficient * dt / (dx * dx);
-        matrix.setZero();
 
         // Main diagonal
         for (size_t i = 0; i < numberOfCells; i++)
@@ -43,14 +42,14 @@ namespace solvers
 
         // Initial condition = dirac delta at left boundary
         // Solution vector represents density in the given cell
-        solution->setZero();
-        (*solution)(0) = 1.0 / dx;
+        std::fill(solution->begin(), solution->end(), 0.0);
+        (*solution)[0] = 1.0 / dx;
 
         // Do time stepping
         for (size_t k = 0; k * dt < endTime; ++k)
         {
             // Solve system
-            *solution_tmp = matrix.llt().solve(*solution);
+            matrix.solve(*solution, *solution_tmp);
             std::swap(solution, solution_tmp);
         }
         return *solution;
