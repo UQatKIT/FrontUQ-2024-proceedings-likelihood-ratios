@@ -166,7 +166,7 @@ namespace solvers
         assert(solution.size() == dimension);
 
         // Produce modified matrix
-        double gamma = std::sqrt(bottomLeft * topRight);
+        double gamma = -(*mainDiagonal)[0];
         (*mainDiagonal)[0] -= gamma;
         (*mainDiagonal)[dimension - 1] -= bottomLeft * topRight / gamma;
 
@@ -184,21 +184,56 @@ namespace solvers
         thomas(u, q);
         thomas(rhs, y);
 
+        std::cout << "Matrix:" << std::endl;
+
+        std::cout << "u: ";
+        for (const auto &elem : u)
+            std::cout << elem << " ";
+        std::cout << std::endl;
+
+        std::cout << "v: ";
+        for (const auto &elem : v)
+            std::cout << elem << " ";
+        std::cout << std::endl;
+
+        std::cout << "q: ";
+        for (const auto &elem : q)
+            std::cout << elem << " ";
+        std::cout << std::endl;
+
+        std::cout << "y: ";
+        for (const auto &elem : y)
+            std::cout << elem << " ";
+        std::cout << std::endl;
+
         // Compute the solution
         double vy = 0.0;
         double vq = 0.0;
-        std::transform(v.begin(), v.end(), y.begin(), y.begin(),
+        // We repurpose u here as a workspace vector.
+        std::transform(v.begin(), v.end(), y.begin(), u.begin(),
                        [](double v_elem, double y_elem)
                        { return v_elem * y_elem; });
-        vy = std::accumulate(y.begin(), y.end(), 0.0);
-        std::transform(v.begin(), v.end(), q.begin(), q.begin(),
+        vy = std::accumulate(u.begin(), u.end(), 0.0);
+        std::transform(v.begin(), v.end(), q.begin(), u.begin(),
                        [](double v_elem, double q_elem)
                        { return v_elem * q_elem; });
-        vq = std::accumulate(q.begin(), q.end(), 0.0);
+        vq = std::accumulate(u.begin(), u.end(), 0.0);
         double factor = vy / (1.0 + vq);
         std::transform(q.begin(), q.end(), y.begin(), solution.begin(),
                        [factor](double q_elem, double y_elem)
                        { return y_elem - factor * q_elem; });
+
+        std::cout << "vy: " << vy << std::endl;
+        std::cout << "vq: " << vq << std::endl;
+        std::cout << "factor: " << factor << std::endl;
+        std::cout << "Solution: ";
+        for (const auto &elem : solution)
+            std::cout << elem << " ";
+        std::cout << std::endl;
+
+        // Restore the main diagonal
+        (*mainDiagonal)[0] += gamma;
+        (*mainDiagonal)[dimension - 1] += bottomLeft * topRight / gamma;
     }
 
     void PeriodicTridiagonalMatrix::transposedSolve(const std::vector<double> &rhs, std::vector<double> &solution)
