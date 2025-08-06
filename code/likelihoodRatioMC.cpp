@@ -115,6 +115,18 @@ int main(int argc, char **argv)
         std::cout << val << " ";
     }
     std::cout << std::endl;
+    std::cout << "Sum: ";
+    for (const auto &val : sum)
+    {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "Sum squared: ";
+    for (const auto &val : sum_squared)
+    {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
 
     std::vector<double> average(4);
     std::transform(sum.begin(), sum.end(), average.begin(), [number_of_samples](double value)
