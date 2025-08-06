@@ -5,7 +5,6 @@
 
 #include "heat_equation_grid.hpp"
 #include <iostream>
-#include <cassert>
 
 namespace solvers
 {
