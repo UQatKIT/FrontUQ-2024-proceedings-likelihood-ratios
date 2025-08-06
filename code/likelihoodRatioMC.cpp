@@ -55,6 +55,13 @@ int main(int argc, char **argv)
     solvers::HeatEquationGrid solver(domain_length, number_of_cells, dt, end_time);
     auto true_solution = solver.solve(true_state);
 
+    std::cout << "True solution: ";
+    for (const auto &val : true_solution)
+    {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+
     std::vector<double> sum(4, 0.0);
     std::vector<double> sum_squared(4, 0.0);
     std::vector<double> output_sum(number_of_cells, 0.0);
@@ -95,6 +102,19 @@ int main(int argc, char **argv)
         std::transform(new_output.begin(), new_output.end(), output_sum_squared.begin(), output_sum_squared.begin(), [](double value, double acc)
                        { return acc + value * value; });
     }
+
+    std::cout << "Output sum: ";
+    for (const auto &val : output_sum)
+    {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "Output sum squared: ";
+    for (const auto &val : output_sum_squared)
+    {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
 
     std::vector<double> average(4);
     std::transform(sum.begin(), sum.end(), average.begin(), [number_of_samples](double value)
