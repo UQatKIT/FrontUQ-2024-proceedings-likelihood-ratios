@@ -54,7 +54,6 @@ namespace solvers
             matrix.solve(*solution, *solution_tmp);
             std::swap(solution, solution_tmp);
         }
-        assert(false);
         return *solution;
     }
 
