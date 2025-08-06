@@ -184,28 +184,6 @@ namespace solvers
         thomas(u, q);
         thomas(rhs, y);
 
-        std::cout << "Matrix:" << std::endl;
-
-        std::cout << "u: ";
-        for (const auto &elem : u)
-            std::cout << elem << " ";
-        std::cout << std::endl;
-
-        std::cout << "v: ";
-        for (const auto &elem : v)
-            std::cout << elem << " ";
-        std::cout << std::endl;
-
-        std::cout << "q: ";
-        for (const auto &elem : q)
-            std::cout << elem << " ";
-        std::cout << std::endl;
-
-        std::cout << "y: ";
-        for (const auto &elem : y)
-            std::cout << elem << " ";
-        std::cout << std::endl;
-
         // Compute the solution
         double vy = 0.0;
         double vq = 0.0;
@@ -222,14 +200,6 @@ namespace solvers
         std::transform(q.begin(), q.end(), y.begin(), solution.begin(),
                        [factor](double q_elem, double y_elem)
                        { return y_elem - factor * q_elem; });
-
-        std::cout << "vy: " << vy << std::endl;
-        std::cout << "vq: " << vq << std::endl;
-        std::cout << "factor: " << factor << std::endl;
-        std::cout << "Solution: ";
-        for (const auto &elem : solution)
-            std::cout << elem << " ";
-        std::cout << std::endl;
 
         // Restore the main diagonal
         (*mainDiagonal)[0] += gamma;
