@@ -89,6 +89,9 @@ int main(int argc, char **argv)
         auto new_output = solver_mc->solve(new_state);
         double new_likelihood = sampler_mc.likelihoodFunction(new_output);
 
+        std::cout << "Sample " << i + 1 << ": Current likelihood = " << current_likelihood
+                  << ", New likelihood = " << new_likelihood << std::endl;
+
         sum[0] += current_likelihood;
         sum[1] += new_likelihood;
         sum[2] += new_likelihood / current_likelihood;
@@ -98,35 +101,23 @@ int main(int argc, char **argv)
         sum_squared[2] += (new_likelihood / current_likelihood) * (new_likelihood / current_likelihood);
         sum_squared[3] += std::min(new_likelihood / current_likelihood, 1.0) * std::min(new_likelihood / current_likelihood, 1.0);
 
+        std::cout << "Sum: ";
+        for (const auto &val : sum)
+        {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "Sum squared: ";
+        for (const auto &val : sum_squared)
+        {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+
         std::transform(new_output.begin(), new_output.end(), output_sum.begin(), output_sum.begin(), std::plus<double>());
         std::transform(new_output.begin(), new_output.end(), output_sum_squared.begin(), output_sum_squared.begin(), [](double value, double acc)
                        { return acc + value * value; });
     }
-
-    std::cout << "Output sum: ";
-    for (const auto &val : output_sum)
-    {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Output sum squared: ";
-    for (const auto &val : output_sum_squared)
-    {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Sum: ";
-    for (const auto &val : sum)
-    {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Sum squared: ";
-    for (const auto &val : sum_squared)
-    {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
 
     std::vector<double> average(4);
     std::transform(sum.begin(), sum.end(), average.begin(), [number_of_samples](double value)
