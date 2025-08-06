@@ -55,13 +55,6 @@ int main(int argc, char **argv)
     solvers::HeatEquationGrid solver(domain_length, number_of_cells, dt, end_time);
     auto true_solution = solver.solve(true_state);
 
-    std::cout << "True solution: ";
-    for (const auto &val : true_solution)
-    {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-
     std::vector<double> sum(4, 0.0);
     std::vector<double> sum_squared(4, 0.0);
     std::vector<double> output_sum(number_of_cells, 0.0);
