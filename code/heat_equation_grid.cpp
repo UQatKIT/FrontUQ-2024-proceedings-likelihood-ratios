@@ -4,6 +4,8 @@
  */
 
 #include "heat_equation_grid.hpp"
+#include <iostream>
+#include <cassert>
 
 namespace solvers
 {
@@ -45,13 +47,29 @@ namespace solvers
         std::fill(solution->begin(), solution->end(), 0.0);
         (*solution)[0] = 1.0 / dx;
 
+        std::cout << "Solving heat equation with diffusion coefficient: " << diffusionCoefficient << std::endl;
+
         // Do time stepping
         for (size_t k = 0; k * dt < endTime; ++k)
         {
             // Solve system
             matrix.solve(*solution, *solution_tmp);
+            std::cout << "Time step " << k << std::endl;
+            std::cout << "Solution_tmp: ";
+            for (const auto &elem : *solution_tmp)
+            {
+                std::cout << elem << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "Solution: ";
+            for (const auto &elem : *solution)
+            {
+                std::cout << elem << " ";
+            }
+            std::cout << std::endl;
             std::swap(solution, solution_tmp);
         }
+        assert(false);
         return *solution;
     }
 
