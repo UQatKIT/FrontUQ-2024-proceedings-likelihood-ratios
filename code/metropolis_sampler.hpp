@@ -50,10 +50,9 @@ namespace samplers
         {
             std::transform(x.begin(), x.end(), mu.begin(), workVector.begin(),
                            std::minus<double>());
-            double differenceNorm = 0.0;
-            std::accumulate(workVector.begin(), workVector.end(), differenceNorm, [](double a, double b)
-                            { return a + b * b; });
-            return 1.0 / std::pow(sigma / std::sqrt(2 * M_PI), x.size()) * std::exp(-0.5 * std::pow(differenceNorm / sigma, 2.0));
+            double differenceNorm = std::accumulate(workVector.begin(), workVector.end(), 0.0, [](double a, double b)
+                                                    { return a + b * b; });
+            return 1.0 / std::pow(sigma / std::sqrt(2 * M_PI), x.size()) * std::exp(-0.5 * differenceNorm / std::pow(sigma, 2.0));
         }
         MetropolisSampler(std::shared_ptr<Solver> solver, double initialInput, std::vector<double> mu, double sigma, double minInput, double maxInput)
             : solver(solver), input(initialInput), mu(mu), sigma(sigma), minInput(minInput), maxInput(maxInput)
