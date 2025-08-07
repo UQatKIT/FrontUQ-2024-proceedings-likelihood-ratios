@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Make build directory if it doesn't exist
 mkdir -p build

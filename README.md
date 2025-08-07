@@ -5,7 +5,15 @@ Code and experiments for the article titled "An Investigation into the Distribut
 The repository contains two scripts. The first one `setup_script.sh` builds the software and runs a small scale version of the paper experiments to verify that everything is working correctly. The second one `run_full_simulation.sh` does the same, but runs the full simulation correspondinding to the figures from the paper. This simulation will take some time (potentially in the order of an hour or more on a laptop).
 
 ## Dependencies
-The C++ code for generating the results relies on Eigen, however the build system downloads this automatically assuming you have a working internet connection. The build is based on CMake and Make. If you do not have these on your system, they can be installed using your favourite package manager. The Python code for plottig requires PyPlot. If you do not have this library installed, you can do so using `pip3 install pyplot`. Otherwise, please reach out with any issues to emil.loevbak@kit.edu.
+The build is based on CMake and Make. If you do not have these on your system, they can be installed using your favourite package manager. The Python code for plottig requires PyPlot. If you do not have this library installed, you can do so using `pip3 install pyplot`. Otherwise, please reach out with any issues to emil.loevbak@kit.edu.
 
 ## Supported systems
-The code should work out of the box on regular Linux distributions and has been tested on Ubuntu 24.04 using both GCC and Clang. Testing of the code on other systems is currently ongoing progress and there is a known issue with Eigen on Apple Clang. If it does not work on your system, please open an issue.
+The results in the publication were produced on Ubuntu 24.04 using GCC 13.3.0. The code has also been verified to compile on Clang 18.1.3 on the same system. On Mac, there are known build issues with Apple Clang (accessed under the alias gcc under the default configuration) due to the lack of OpenMP support in the compiler. These issues can be avoided by using Homebrew GCC version 15 before running the tests (see below). Testing of the code on other systems is currently ongoing progress. If it does not work on your system, please open an issue.
+
+### Compiling under Homebrew GCC
+Follow these steps to use GCC 15. If you do not have version 15 available, another version will likely work by changing the numbers accordingly.
+1. Ensure you have Homebrew GCC installed: `brew install gcc@15`
+2. Set the compiler environment variables using `export CC=gcc-15` and `export CXX=g++-15`
+
+## Note for reviewers
+The figures in the submitted manuscript were generated with the code as it apperas in commit `d72a8dff170ffd04efb96e952ba67c5cad599e40`. That version of the code had a dependency on Eigen for the computation of the reference solution with finite differences (not the Monte Carlo solution). This dependency caused compilation issues on Mac. To improve reproducibility, we have since removed this dependency, substituting our own solver for the matrix system in the diffusion equation. We have since re-run the experiments with the latest commit, reproducing the same qualitative figures. Even though there are no qualitative changes in the results, we intend to update the figures upon revision for the sake of correctness. In the mean time, we leave this note here.

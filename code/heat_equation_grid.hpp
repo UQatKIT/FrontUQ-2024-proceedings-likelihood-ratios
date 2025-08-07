@@ -5,17 +5,16 @@
 
 #pragma once
 
-#include <Eigen/Dense>
-#include <memory>
+#include "PeriodicTridiagonalMatrix.hpp"
 
 namespace solvers
 {
     class HeatEquationGrid
     {
     private:
-        Eigen::MatrixXd matrix;
-        std::shared_ptr<Eigen::VectorXd> solution;
-        std::shared_ptr<Eigen::VectorXd> solution_tmp;
+        PeriodicTridiagonalMatrix matrix;
+        std::shared_ptr<std::vector<double>> solution;
+        std::shared_ptr<std::vector<double>> solution_tmp;
         double domainLength;
         size_t numberOfCells;
         double dt;
@@ -23,6 +22,6 @@ namespace solvers
 
     public:
         HeatEquationGrid(double domainLength, size_t numberOfCells, double dt, double endTime);
-        Eigen::VectorXd solve(double diffusionCoefficient);
+        std::vector<double> solve(double diffusionCoefficient);
     };
 }; // namespace solvers

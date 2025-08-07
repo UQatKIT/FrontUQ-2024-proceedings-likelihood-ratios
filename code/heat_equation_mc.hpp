@@ -4,8 +4,7 @@
  */
 
 #pragma once
-
-#include <Eigen/Dense>
+#include <vector>
 
 namespace solvers
 {
@@ -17,10 +16,10 @@ namespace solvers
         double dt;
         double endTime;
         size_t numberOfParticles;
-        Eigen::VectorXd solution;
+        std::vector<double> solution;
 
     public:
         HeatEquationMonteCarlo(double domainLength, size_t numberOfCells, double dt, double endTime, size_t numberOfParticles);
-        Eigen::VectorXd solve(double diffusionCoefficient);
+        std::vector<double> solve(double diffusionCoefficient);
     };
 }; // namespace solvers

@@ -5,8 +5,11 @@
 
 #pragma once
 
-#include <Eigen/Dense>
 #include <random>
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <omp.h>
 
 namespace samplers
 {
@@ -15,15 +18,16 @@ namespace samplers
     {
     private:
         std::shared_ptr<Solver> solver;
-        Eigen::VectorXd output;
+        std::vector<double> output;
         double input;
-        Eigen::VectorXd mu;
+        std::vector<double> mu;
         double sigma;
         double minInput;
         double maxInput;
 
         std::default_random_engine generator;
         std::uniform_real_distribution<double> uniformDistribution;
+        std::vector<double> workVector;
 
         double generateProposal(double input)
         {
@@ -42,16 +46,21 @@ namespace samplers
         {
             return proposal / input;
         }
-        double likelihoodFunction(Eigen::VectorXd x)
+        double likelihoodFunction(std::vector<double> x)
         {
-            return 1.0 / std::pow(sigma / std::sqrt(2 * M_PI), x.size()) * std::exp(-0.5 * std::pow((x - mu).norm() / sigma, 2.0));
+            std::transform(x.begin(), x.end(), mu.begin(), workVector.begin(),
+                           std::minus<double>());
+            double differenceNorm = std::accumulate(workVector.begin(), workVector.end(), 0.0, [](double a, double b)
+                                                    { return a + b * b; });
+            return 1.0 / std::pow(sigma / std::sqrt(2 * M_PI), x.size()) * std::exp(-0.5 * differenceNorm / std::pow(sigma, 2.0));
         }
-        MetropolisSampler(std::shared_ptr<Solver> solver, double initialInput, Eigen::VectorXd mu, double sigma, double minInput, double maxInput)
+        MetropolisSampler(std::shared_ptr<Solver> solver, double initialInput, std::vector<double> mu, double sigma, double minInput, double maxInput)
             : solver(solver), input(initialInput), mu(mu), sigma(sigma), minInput(minInput), maxInput(maxInput)
         {
             generator = std::default_random_engine(std::random_device{}());
             uniformDistribution = std::uniform_real_distribution<double>(0.0, 1.0);
             output = solver->solve(input);
+            workVector.resize(mu.size());
         }
 
         MetropolisSampler(const MetropolisSampler &other)
@@ -60,6 +69,7 @@ namespace samplers
             generator = std::default_random_engine(std::random_device{}());
             uniformDistribution = std::uniform_real_distribution<double>(0.0, 1.0);
             output = solver->solve(input);
+            workVector.resize(mu.size());
         }
 
         double sampleGIMH()
