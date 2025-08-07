@@ -14,6 +14,7 @@ The results in the publication were produced on Ubuntu 24.04 using GCC 13.3.0. T
 Follow these steps to use GCC 15. If you do not have version 15 available, another version will likely work by changing the numbers accordingly.
 1. Ensure you have Homebrew GCC installed: `brew install gcc@15`
 2. Set the compiler environment variables using `export CC=gcc-15` and `export CXX=g++-15`
+3. Run the setup script as specified above.
 
 ## Note for reviewers
 The figures in the submitted manuscript were generated with the code as it apperas in commit `d72a8dff170ffd04efb96e952ba67c5cad599e40`. That version of the code had a dependency on Eigen for the computation of the reference solution with finite differences (not the Monte Carlo solution). This dependency caused compilation issues on Mac. To improve reproducibility, we have since removed this dependency, substituting our own solver for the matrix system in the diffusion equation. We have since re-run the experiments with the latest commit, reproducing the same qualitative figures. Even though there are no qualitative changes in the results, we intend to update the figures upon revision for the sake of correctness. In the mean time, we leave this note here.
