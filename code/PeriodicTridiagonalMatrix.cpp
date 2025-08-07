@@ -1,19 +1,19 @@
 /*
- * This file is part of TODO.
- * Copyright (C) 2021 Emil Loevbak emil.loevbak@kuleuven.be
+ * This file is part of FrontUQ-2024-proceedings-likelihood-ratios.
+ * Copyright (C) 2025 Emil Loevbak emil.loevbak@kit.edu
  *
- * TODO is free software: you can redistribute it and/or modify
+ * FrontUQ-2024-proceedings-likelihood-ratios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * TODO is distributed in the hope that it will be useful,
+ * FrontUQ-2024-proceedings-likelihood-ratios is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with TODO.  If not, see <https://www.gnu.org/licenses/>.
+ * along with FrontUQ-2024-proceedings-likelihood-ratios.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "PeriodicTridiagonalMatrix.hpp"
