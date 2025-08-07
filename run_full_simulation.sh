@@ -23,6 +23,9 @@ for measurement_noise in 0.01 0.025 0.05 0.1 0.25 0.5 1; do
     done
 done
 
-echo "Generating plots..."
-python3 code/plotLikelihoodRatiosFullScale.py
-echo "Plots written as CSV files in the output directory."
+echo "The full-scale program has completed successfully."
+echo "Removing the build directory..."
+rm -rf build
+
+echo ""
+echo "You can plot the results using the provided Python script 'code/plotLikelihoodRatiosFullScale.py' from this directory."

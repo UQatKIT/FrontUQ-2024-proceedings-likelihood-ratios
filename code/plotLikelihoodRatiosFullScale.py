@@ -204,3 +204,5 @@ for true, current, new, samples in product(
                 row.append(str(ratio))
                 row.append(str(np.sqrt(max_solver_variances[idx][sigma_idx])))
             csvfile.write(",".join(row) + "\n")
+
+print("Plots written as CSV files in the output directory.")

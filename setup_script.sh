@@ -23,8 +23,11 @@ for measurement_noise in 0.1 1; do
     done
 done
 
-echo "Generating plots for the small test program..."
-python3 code/plotLikelihoodRatiosTest.py
-echo "Plots written as CSV files in the output directory."
+echo "The small test program has completed successfully."
+echo "Removing the build directory..."
+rm -rf build
+
+echo ""
+echo "You can plot the results using the provided Python script 'code/plotLikelihoodRatiosTest.py' from this directory."
 echo "To run the full-scale simulation, run the script 'run_full_simulation.sh'. This will likely take several hours to complete."
 echo "The code makes use of OpenMP, so it is recommended to set the environment variable OMP_NUM_THREADS to the number of threads you want to use."
