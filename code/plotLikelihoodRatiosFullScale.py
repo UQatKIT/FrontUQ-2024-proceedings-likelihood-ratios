@@ -110,21 +110,12 @@ for true, current, new, samples in product(
             lines_labels[i].append(label)
 
         # Set xlabel only for the last subplot
-        axes[-1].set_xlabel("Particles")
+        axes[-1].set_xlabel("max_solver_sigma")
 
         # Add legends after all lines are added
         for i in range(4):
             axes[i].legend()
 
-        # for i in range(4):
-        #     plt.figure(figsize=(10, 5))
-        #     plt.plot(particles_arr, variances_arr[i], marker='o')
-        #     plt.xlabel("Particles")
-        #     plt.ylabel(f"Variance of {quantity_names[i]}")
-        #     plt.title(f"Variance vs Particles for {quantity_names[i]}")
-        #     plt.xscale("log")
-        #     plt.grid(True)
-        #     plt.tight_layout()
     plt.suptitle(
         f"True={true}, Current={current}, Proposal={new}"
     )
@@ -186,7 +177,7 @@ for true, current, new, samples in product(
         csv_filepath = os.path.join(output_dir, csv_filename)
         with open(csv_filepath, "w") as csvfile:
             # Write header: particles, then for each sigma: mean, max_solver_variance
-            header = ["particles"]
+            header = ["max_solver_sigma"]
             for s in sigma_vals:
                 header.append(f"meansigma{s}")
                 header.append(f"maxsolverstdsigma{s}")
@@ -205,7 +196,7 @@ for true, current, new, samples in product(
     ratio_csv_filepath = os.path.join(output_dir, ratio_csv_filename)
     with open(ratio_csv_filepath, "w") as csvfile:
         # Write header: particles, then for each sigma: ratio of means
-        header = ["particles"]
+        header = ["max_solver_sigma"]
         for s in sigma_vals:
             header.append(f"ratiosigma{s}")
             header.append(f"maxsolverstdsigma{s}")
