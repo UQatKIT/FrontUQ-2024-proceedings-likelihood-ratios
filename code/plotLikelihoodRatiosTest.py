@@ -27,8 +27,8 @@ output_dir = "output"
 true_vals = ["0.1"] 
 current_vals = ["0.1", "0.08"]
 new_vals =  ["0.1", "0.08"]
-sigma_vals = ["0.1", "1"]
-particles_vals = ["1000", "10000"]
+sigma_vals = ["0.025", "0.1"]
+particles_vals = ["100", "1000", "10000"]
 samples_vals = ["100"]
 
 for true, current, new, samples in product(

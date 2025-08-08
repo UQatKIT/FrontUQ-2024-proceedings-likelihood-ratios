@@ -11,8 +11,8 @@ make
 echo "Build complete. Now running a small test program..."
 cd ..
 mkdir -p output
-for measurement_noise in 0.1 1; do
-    for particle_count in 1000 10000; do
+for measurement_noise in 0.025 0.1; do
+    for particle_count in 100 1000 10000; do
         echo "Running with measurement noise: $measurement_noise and particle count: $particle_count"
         echo "0.1 to 0.1"
         build/frontuq_likelihood_ratios 0.1 0.1 0.1 $measurement_noise $particle_count 100
